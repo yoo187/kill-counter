@@ -79,8 +79,7 @@
             box-shadow: 0 0 15px var(--primary-glow);
         }
 
-        /* Fix voor zwarte PNG afbeeldingen */
-        .weapon-card img, .kill-btn img { 
+        .weapon-card img, .kill-btn img, .stat-weapon-img { 
             max-width: 80%; max-height: 70%; object-fit: contain;
             filter: brightness(0) invert(1) drop-shadow(0 0 5px rgba(255,255,255,0.2));
             pointer-events: none;
@@ -93,7 +92,6 @@
         }
         .stat-value { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; font-weight: 900; }
 
-        /* Thumb-friendly selectors */
         #shot-selector { display: flex; gap: 10px; margin-bottom: 20px; }
         .shot-option { flex: 1; }
         .shot-option input { display: none; }
@@ -125,11 +123,19 @@
         }
         .secondary-btn { width: 100%; background: none; border: none; color: #555; font-size: 0.7rem; padding: 10px; text-transform: uppercase; }
 
+        /* Debriefing Styles */
         .stat-line { 
-            display: flex; justify-content: space-between; padding: 15px; 
+            display: flex; justify-content: space-between; padding: 12px 15px; 
             background: var(--glass); border: 1px solid var(--glass-border);
-            margin-bottom: 10px; border-radius: 10px; font-family: 'Orbitron', sans-serif;
+            margin-bottom: 8px; border-radius: 10px; font-family: 'Orbitron', sans-serif;
+            align-items: center;
         }
+        .weapon-summary-card {
+            background: rgba(255,255,255,0.03); border-radius: 12px;
+            padding: 10px; margin-top: 15px; border: 1px dashed #333;
+        }
+        .stat-weapon-img { height: 30px; width: auto; filter: brightness(0) invert(1); }
+        .summary-title { font-family: 'Orbitron'; font-size: 0.7rem; color: var(--primary); margin-bottom: 10px; display: block; }
     </style>
 </head>
 <body>
@@ -180,175 +186,198 @@
         <section id="result-screen" class="hidden">
             <header><h1>DEBRIEFING</h1></header>
             <div id="stats-output"></div>
-            <br>
+            <div id="weapon-stats-output"></div>
+            <br><br>
             <button onclick="resetApp()" class="primary-btn">NEW MISSION</button>
         </section>
     </div>
 
     <script>
-        // AUDIO ENGINE VOOR MP3
-        function playSound(type) {
-            const sounds = {
-                'headshot': 'mp3/headshot.mp3',
-                'body': 'mp3/body.mp3',
-                'death': 'mp3/death.mp3'
-            };
-            const audio = new Audio(sounds[type]);
-            audio.play().catch(e => console.log("Audio play blocked of niet gevonden"));
+    function playSound(type) {
+        const sounds = { 'headshot': 'mp3/headshot.mp3', 'body': 'mp3/body.mp3', 'death': 'mp3/death.mp3' };
+        const audio = new Audio(sounds[type]);
+        audio.play().catch(e => console.log("Audio play blocked"));
+    }
+
+    const weaponDatabase = [
+        { id: 1, img: "50 Gun SVG_1.png" }, { id: 2, img: "50 Gun SVG_2.png" },
+        { id: 3, img: "50 Gun SVG_3.png" }, { id: 4, img: "50 Gun SVG_4.png" },
+        { id: 5, img: "50 Gun SVG_5.png" }, { id: 6, img: "50 Gun SVG_6.png" },
+        { id: 7, img: "50 Gun SVG_7.png" }, { id: 8, img: "50 Gun SVG_8.png" },
+        { id: 9, img: "50 Gun SVG_9.png" }, { id: 10, img: "50 Gun SVG_10.png" },
+        { id: 11, img: "50 Gun SVG_11.png" }, { id: 12, img: "50 Gun SVG_12.png" },
+        { id: 13, img: "50 Gun SVG_13.png" }, { id: 14, img: "50 Gun SVG_14.png" },
+        { id: 15, img: "50 Gun SVG_15.png" }, { id: 16, img: "50 Gun SVG_16.png" },
+        { id: 17, img: "50 Gun SVG_17.png" }, { id: 18, img: "50 Gun SVG_18.png" },
+        { id: 19, img: "50 Gun SVG_19.png" }, { id: 20, img: "50 Gun SVG_20.png" },
+        { id: 21, img: "50 Gun SVG_21.png" }, { id: 22, img: "50 Gun SVG_22.png" },
+        { id: 23, img: "50 Gun SVG_23.png" }, { id: 24, img: "50 Gun SVG_24.png" },
+        { id: 25, img: "50 Gun SVG_25.png" }, { id: 26, img: "50 Gun SVG_26.png" },
+        { id: 27, img: "50 Gun SVG_27.png" }, { id: 28, img: "50 Gun SVG_28.png" },
+        { id: 29, img: "50 Gun SVG_29.png" }, { id: 30, img: "50 Gun SVG_30.png" },
+        { id: 31, img: "50 Gun SVG_31.png" }, { id: 32, img: "50 Gun SVG_32.png" },
+        { id: 33, img: "50 Gun SVG_33.png" }, { id: 34, img: "50 Gun SVG_34.png" },
+        { id: 35, img: "50 Gun SVG_35.png" }, { id: 36, img: "50 Gun SVG_36.png" },
+        { id: 37, img: "50 Gun SVG_37.png" }, { id: 38, img: "50 Gun SVG_38.png" },
+        { id: 39, img: "50 Gun SVG_39.png" }, { id: 40, img: "50 Gun SVG_40.png" },
+        { id: 41, img: "50 Gun SVG_41.png" }, { id: 42, img: "50 Gun SVG_42.png" },
+        { id: 43, img: "50 Gun SVG_43.png" }, { id: 44, img: "50 Gun SVG_44.png" },
+        { id: 45, img: "50 Gun SVG_45.png" }, { id: 46, img: "50 Gun SVG_46.png" },
+        { id: 47, img: "50 Gun SVG_47.png" }, { id: 48, img: "50 Gun SVG_48.png" },
+        { id: 49, img: "50 Gun SVG_49.png" }, { id: 50, img: "50 Gun SVG_50.png" },
+        { id: 51, img: "1_001.png" }, { id: 52, img: "10_001.png" },
+        { id: 53, img: "20_001.png" }, { id: 54, img: "23_001.png" },
+        { id: 55, img: "30_001.png" }, { id: 56, img: "31_001.png" },
+        { id: 57, img: "32_001.png" }, { id: 58, img: "35_001.png" },
+        { id: 59, img: "38_001.png" }, { id: 60, img: "43_001.png" },
+        { id: 61, img: "slice1@3x.png" }, { id: 62, img: "slice5@3x.png" },
+        { id: 63, img: "slice9@3x.png" }, { id: 64, img: "slice10@3x.png" },
+        { id: 65, img: "slice15@3x.png" }, { id: 66, img: "slice23@3x.png" },
+        { id: 67, img: "slice28@3x.png" }, { id: 68, img: "slice31@3x.png" },
+        { id: 69, img: "slice35@3x.png" }, { id: 70, img: "slice36@3x.png" }
+    ];
+
+    let state = { playerName: "", selectedWeaponIds: [], kills: [], deaths: 0, inGame: false };
+
+    function init() {
+        renderLobby();
+        loadFromStorage();
+        document.getElementById('start-game-btn').onclick = startMission;
+        document.getElementById('end-game-btn').onclick = endMission;
+        document.getElementById('add-death-btn').onclick = registerDeath;
+        document.getElementById('player-name').oninput = (e) => { state.playerName = e.target.value; saveToStorage(); };
+    }
+
+    function renderLobby() {
+        const grid = document.getElementById('weapon-selection-grid');
+        grid.innerHTML = '';
+        weaponDatabase.forEach(wep => {
+            const card = document.createElement('div');
+            card.className = `weapon-card ${state.selectedWeaponIds.includes(wep.id) ? 'selected' : ''}`;
+            card.innerHTML = `<img src="IMG/${wep.img}" onerror="this.style.display='none'">`;
+            card.onclick = () => toggleWeapon(wep.id, card);
+            grid.appendChild(card);
+        });
+    }
+
+    function toggleWeapon(id, el) {
+        const index = state.selectedWeaponIds.indexOf(id);
+        if (index > -1) { state.selectedWeaponIds.splice(index, 1); el.classList.remove('selected'); }
+        else { state.selectedWeaponIds.push(id); el.classList.add('selected'); }
+        document.getElementById('start-game-btn').disabled = state.selectedWeaponIds.length === 0;
+        saveToStorage();
+    }
+
+    function startMission() {
+        state.inGame = true;
+        document.getElementById('setup-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+        document.getElementById('display-name').innerText = state.playerName || "OPERATOR";
+        renderGameWeapons();
+        saveToStorage();
+    }
+
+    function renderGameWeapons() {
+        const grid = document.getElementById('active-weapons');
+        grid.innerHTML = '';
+        weaponDatabase.filter(w => state.selectedWeaponIds.includes(w.id)).forEach(wep => {
+            const btn = document.createElement('div');
+            btn.className = 'kill-btn';
+            btn.innerHTML = `<img src="IMG/${wep.img}">`;
+            btn.onclick = () => registerKill(wep);
+            grid.appendChild(btn);
+        });
+    }
+
+    function registerKill(weapon) {
+        const type = document.querySelector('input[name="shot-type"]:checked').value;
+        state.kills.push({ weaponImg: weapon.img, type: type });
+        document.getElementById('kill-count').innerText = state.kills.length;
+        showKillFeed(weapon, type, false);
+        playSound(type === 'head' ? 'headshot' : 'body');
+        if (navigator.vibrate) navigator.vibrate(type === 'head' ? [80, 40, 80] : 40);
+        saveToStorage();
+    }
+
+    function registerDeath() {
+        state.deaths++;
+        document.getElementById('death-count').innerText = state.deaths;
+        showKillFeed(null, null, true);
+        playSound('death');
+        if (navigator.vibrate) navigator.vibrate(200);
+        saveToStorage();
+    }
+
+    function showKillFeed(weapon, type, isDeath) {
+        const feed = document.getElementById('kill-feed');
+        const div = document.createElement('div');
+        if (isDeath) {
+            div.className = 'kill-notif';
+            div.style.borderLeftColor = 'var(--danger)';
+            div.innerHTML = `<span>KIA</span> 💀 <span>${state.playerName || 'OP'}</span>`;
+        } else {
+            div.className = `kill-notif ${type === 'head' ? 'is-headshot' : ''}`;
+            div.innerHTML = `<span>${state.playerName || 'OP'}</span> <img src="IMG/${weapon.img}"> <span>TARGET</span> ${type === 'head' ? '<span style="color:var(--danger)">[HS]</span>' : ''}`;
         }
+        feed.prepend(div);
+        setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 500); }, 2500);
+    }
 
-        const weaponDatabase = [
-            { id: 1, img: "50 Gun SVG_1.png" }, { id: 2, img: "50 Gun SVG_2.png" },
-            { id: 3, img: "50 Gun SVG_3.png" }, { id: 4, img: "50 Gun SVG_4.png" },
-            { id: 5, img: "50 Gun SVG_5.png" }, { id: 6, img: "50 Gun SVG_6.png" },
-            { id: 7, img: "50 Gun SVG_7.png" }, { id: 8, img: "50 Gun SVG_8.png" },
-            { id: 9, img: "50 Gun SVG_9.png" }, { id: 10, img: "50 Gun SVG_10.png" },
-            { id: 11, img: "50 Gun SVG_11.png" }, { id: 12, img: "50 Gun SVG_12.png" },
-            { id: 13, img: "50 Gun SVG_13.png" }, { id: 14, img: "50 Gun SVG_14.png" },
-            { id: 15, img: "50 Gun SVG_15.png" }, { id: 16, img: "50 Gun SVG_16.png" },
-            { id: 17, img: "50 Gun SVG_17.png" }, { id: 18, img: "50 Gun SVG_18.png" },
-            { id: 19, img: "50 Gun SVG_19.png" }, { id: 20, img: "50 Gun SVG_20.png" },
-            { id: 21, img: "50 Gun SVG_21.png" }, { id: 22, img: "50 Gun SVG_22.png" },
-            { id: 23, img: "50 Gun SVG_23.png" }, { id: 24, img: "50 Gun SVG_24.png" },
-            { id: 25, img: "50 Gun SVG_25.png" }, { id: 26, img: "50 Gun SVG_26.png" },
-            { id: 27, img: "50 Gun SVG_27.png" }, { id: 28, img: "50 Gun SVG_28.png" },
-            { id: 29, img: "50 Gun SVG_29.png" }, { id: 30, img: "50 Gun SVG_30.png" },
-            { id: 31, img: "50 Gun SVG_31.png" }, { id: 32, img: "50 Gun SVG_32.png" },
-            { id: 33, img: "50 Gun SVG_33.png" }, { id: 34, img: "50 Gun SVG_34.png" },
-            { id: 35, img: "50 Gun SVG_35.png" }, { id: 36, img: "50 Gun SVG_36.png" },
-            { id: 37, img: "50 Gun SVG_37.png" }, { id: 38, img: "50 Gun SVG_38.png" },
-            { id: 39, img: "50 Gun SVG_39.png" }, { id: 40, img: "50 Gun SVG_40.png" },
-            { id: 41, img: "50 Gun SVG_41.png" }, { id: 42, img: "50 Gun SVG_42.png" },
-            { id: 43, img: "50 Gun SVG_43.png" }, { id: 44, img: "50 Gun SVG_44.png" },
-            { id: 45, img: "50 Gun SVG_45.png" }, { id: 46, img: "50 Gun SVG_46.png" },
-            { id: 47, img: "50 Gun SVG_47.png" }, { id: 48, img: "50 Gun SVG_48.png" },
-            { id: 49, img: "50 Gun SVG_49.png" }, { id: 50, img: "50 Gun SVG_50.png" },
-            { id: 51, img: "1_001.png" }, { id: 52, img: "10_001.png" },
-            { id: 53, img: "20_001.png" }, { id: 54, img: "23_001.png" },
-            { id: 55, img: "30_001.png" }, { id: 56, img: "31_001.png" },
-            { id: 57, img: "32_001.png" }, { id: 58, img: "35_001.png" },
-            { id: 59, img: "38_001.png" }, { id: 60, img: "43_001.png" },
-            { id: 61, img: "slice1@3x.png" }, { id: 62, img: "slice5@3x.png" },
-            { id: 63, img: "slice9@3x.png" }, { id: 64, img: "slice10@3x.png" },
-            { id: 65, img: "slice15@3x.png" }, { id: 66, img: "slice23@3x.png" },
-            { id: 67, img: "slice28@3x.png" }, { id: 68, img: "slice31@3x.png" },
-            { id: 69, img: "slice35@3x.png" }, { id: 70, img: "slice36@3x.png" }
-        ];
+    function endMission() {
+        state.inGame = false;
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('result-screen').classList.remove('hidden');
+        
+        const totalKills = state.kills.length;
+        const headshots = state.kills.filter(k => k.type === 'head').length;
+        const bodyshots = state.kills.filter(k => k.type === 'body').length;
+        const kd = state.deaths === 0 ? totalKills : (totalKills / state.deaths).toFixed(2);
 
-        let state = { playerName: "", selectedWeaponIds: [], kills: [], deaths: 0, inGame: false };
+        // 1. Tel kills per wapen
+        const weaponCounts = {};
+        state.kills.forEach(k => {
+            weaponCounts[k.weaponImg] = (weaponCounts[k.weaponImg] || 0) + 1;
+        });
 
-        function init() {
-            renderLobby();
-            loadFromStorage();
-            document.getElementById('start-game-btn').onclick = startMission;
-            document.getElementById('end-game-btn').onclick = endMission;
-            document.getElementById('add-death-btn').onclick = registerDeath;
-            document.getElementById('player-name').oninput = (e) => { 
-                state.playerName = e.target.value; 
-                saveToStorage(); 
-            };
-        }
+        // 2. Zet om naar een lijst en SORTEER (Hoog naar laag)
+        const sortedWeapons = Object.entries(weaponCounts).sort((a, b) => b[1] - a[1]);
 
-        function renderLobby() {
-            const grid = document.getElementById('weapon-selection-grid');
-            grid.innerHTML = '';
-            weaponDatabase.forEach(wep => {
-                const card = document.createElement('div');
-                card.className = `weapon-card ${state.selectedWeaponIds.includes(wep.id) ? 'selected' : ''}`;
-                card.innerHTML = `<img src="IMG/${wep.img}" onerror="this.style.display='none'">`;
-                card.onclick = () => toggleWeapon(wep.id, card);
-                grid.appendChild(card);
-            });
-        }
+        // 3. Algemene Stats tonen
+        document.getElementById('stats-output').innerHTML = `
+            <div class="stat-line"><span>TOTAL KILLS</span> <span style="color:var(--primary)">${totalKills}</span></div>
+            <div class="stat-line"><span>TOTAL DEATHS</span> <span style="color:var(--danger)">${state.deaths}</span></div>
+            <div class="stat-line"><span>HEADSHOTS</span> <span>${headshots}</span></div>
+            <div class="stat-line"><span>BODYSHOTS</span> <span>${bodyshots}</span></div>
+            <div class="stat-line"><span>K/D RATIO</span> <span>${kd}</span></div>
+        `;
 
-        function toggleWeapon(id, el) {
-            const index = state.selectedWeaponIds.indexOf(id);
-            if (index > -1) { state.selectedWeaponIds.splice(index, 1); el.classList.remove('selected'); }
-            else { state.selectedWeaponIds.push(id); el.classList.add('selected'); }
-            document.getElementById('start-game-btn').disabled = state.selectedWeaponIds.length === 0;
-            saveToStorage();
-        }
-
-        function startMission() {
-            state.inGame = true;
-            document.getElementById('setup-screen').classList.add('hidden');
-            document.getElementById('game-screen').classList.remove('hidden');
-            document.getElementById('display-name').innerText = state.playerName || "OPERATOR";
-            renderGameWeapons();
-            saveToStorage();
-        }
-
-        function renderGameWeapons() {
-            const grid = document.getElementById('active-weapons');
-            grid.innerHTML = '';
-            weaponDatabase.filter(w => state.selectedWeaponIds.includes(w.id)).forEach(wep => {
-                const btn = document.createElement('div');
-                btn.className = 'kill-btn';
-                btn.innerHTML = `<img src="IMG/${wep.img}">`;
-                btn.onclick = () => registerKill(wep);
-                grid.appendChild(btn);
-            });
-        }
-
-        function registerKill(weapon) {
-            const type = document.querySelector('input[name="shot-type"]:checked').value;
-            state.kills.push({ weapon: weapon.img, type: type });
-            document.getElementById('kill-count').innerText = state.kills.length;
-            showKillFeed(weapon, type, false);
-            playSound(type === 'head' ? 'headshot' : 'body');
-            if (navigator.vibrate) navigator.vibrate(type === 'head' ? [80, 40, 80] : 40);
-            saveToStorage();
-        }
-
-        function registerDeath() {
-            state.deaths++;
-            document.getElementById('death-count').innerText = state.deaths;
-            showKillFeed(null, null, true);
-            playSound('death');
-            if (navigator.vibrate) navigator.vibrate(200);
-            saveToStorage();
-        }
-
-        function showKillFeed(weapon, type, isDeath) {
-            const feed = document.getElementById('kill-feed');
-            const div = document.createElement('div');
-            if (isDeath) {
-                div.className = 'kill-notif';
-                div.style.borderLeftColor = 'var(--danger)';
-                div.innerHTML = `<span>KIA</span> 💀 <span>${state.playerName || 'OP'}</span>`;
-            } else {
-                div.className = `kill-notif ${type === 'head' ? 'is-headshot' : ''}`;
-                div.innerHTML = `<span>${state.playerName || 'OP'}</span> <img src="IMG/${weapon.img}"> <span>TARGET</span> ${type === 'head' ? '<span style="color:var(--danger)">[HS]</span>' : ''}`;
-            }
-            feed.prepend(div);
-            setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 500); }, 2500);
-        }
-
-        function endMission() {
-            state.inGame = false;
-            document.getElementById('game-screen').classList.add('hidden');
-            document.getElementById('result-screen').classList.remove('hidden');
-            const kd = state.deaths === 0 ? state.kills.length : (state.kills.length / state.deaths).toFixed(2);
-            document.getElementById('stats-output').innerHTML = `
-                <div class="stat-line"><span>KILLS</span> <span>${state.kills.length}</span></div>
-                <div class="stat-line"><span>DEATHS</span> <span>${state.deaths}</span></div>
-                <div class="stat-line"><span>K/D</span> <span>${kd}</span></div>
+        // 4. Gesorteerde wapens tonen
+        let weaponHtml = '<span class="summary-title">ARSENAL PERFORMANCE (SORTED):</span>';
+        sortedWeapons.forEach(([img, count]) => {
+            weaponHtml += `
+                <div class="stat-line">
+                    <img src="IMG/${img}" class="stat-weapon-img">
+                    <span>${count} KILLS</span>
+                </div>
             `;
-            saveToStorage();
-        }
+        });
+        
+        document.getElementById('weapon-stats-output').innerHTML = `<div class="weapon-summary-card">${weaponHtml}</div>`;
+        saveToStorage();
+    }
 
-        function saveToStorage() { localStorage.setItem('airsoft_state', JSON.stringify(state)); }
-        function loadFromStorage() {
-            const saved = localStorage.getItem('airsoft_state');
-            if (saved) {
-                state = JSON.parse(saved);
-                document.getElementById('player-name').value = state.playerName || "";
-                if (state.inGame) startMission(); else renderLobby();
-            }
+    function saveToStorage() { localStorage.setItem('airsoft_state', JSON.stringify(state)); }
+    function loadFromStorage() {
+        const saved = localStorage.getItem('airsoft_state');
+        if (saved) {
+            state = JSON.parse(saved);
+            document.getElementById('player-name').value = state.playerName || "";
+            if (state.inGame) startMission(); else renderLobby();
         }
-        function resetApp() { localStorage.removeItem('airsoft_state'); location.reload(); }
+    }
+    function resetApp() { if(confirm("RESET ALL DATA?")) { localStorage.removeItem('airsoft_state'); location.reload(); } }
 
-        init();
-    </script>
+    init();
+</script>
 </body>
 </html>
